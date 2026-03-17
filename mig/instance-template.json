@@ -8,7 +8,7 @@
         "boot": true,
         "autoDelete": true,
         "initializeParams": {
-          "sourceImage": "projects/debian-cloud/global/images/family/debian-12",
+          "sourceImage": "projects/sales-209522/global/images/harness-se-workshop-v0-0-20",
           "diskSizeGb": "10",
           "diskType": "pd-standard"
         }

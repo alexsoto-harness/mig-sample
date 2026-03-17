@@ -37,9 +37,9 @@ service:
         primary:
           primaryArtifactRef: <+input>
           sources:
-            - identifier: debian_image
+            - identifier: workshop_image
               spec:
                 connectorRef: account.Harness_GCP
-                project: debian-cloud
-                versionRegex: debian-12-.*
+                project: sales-209522
+                versionRegex: harness-se-workshop-.*
               type: GceImage
