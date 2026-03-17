@@ -11,6 +11,12 @@ pipeline:
         identifier: Deploy_MIG
         description: Standard MIG deployment
         type: Deployment
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
         spec:
           deploymentType: GoogleManagedInstanceGroup
           service:
