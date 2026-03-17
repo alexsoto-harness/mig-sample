@@ -9,7 +9,7 @@
         "autoDelete": true,
         "initializeParams": {
           "sourceImage": "projects/sales-209522/global/images/harness-se-workshop-v0-0-20",
-          "diskSizeGb": "10",
+          "diskSizeGb": "20",
           "diskType": "pd-standard"
         }
       }
