@@ -1,0 +1,140 @@
+pipeline:
+  name: MIG Demo Blue-Green Deploy
+  identifier: MIG_Demo_BlueGreen_Deploy
+  orgIdentifier: default
+  projectIdentifier: Reference_Architecture
+  tags:
+    deployment-type: mig
+    strategy: blue-green
+  stages:
+    - stage:
+        name: Deploy MIG Blue-Green
+        identifier: Deploy_MIG_BlueGreen
+        description: Blue-Green MIG deployment with traffic shifting
+        type: Deployment
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+        spec:
+          deploymentType: GoogleManagedInstanceGroup
+          service:
+            serviceRef: MIG_Demo_Service
+            serviceInputs:
+              serviceDefinition:
+                type: GoogleManagedInstanceGroup
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: <+input>
+                      sources: <+input>
+          environment:
+            environmentRef: MIG_Demo_Env
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: MIG_Demo_Infra
+          execution:
+            steps:
+              - stepGroup:
+                  name: Google MIG Blue-Green
+                  identifier: Google_MIG_BlueGreen
+                  steps:
+                    - step:
+                        type: DownloadManifests
+                        name: Download Manifests
+                        identifier: DownloadManifests
+                        spec: {}
+                        failureStrategies: []
+                    - step:
+                        type: GoogleMigBlueGreenDeploy
+                        name: BlueGreen Deploy
+                        identifier: BlueGreen_Deploy
+                        spec:
+                          blueEnvironment:
+                            backendService: projects/sales-209522/locations/global/backendServices/mig-demo-backend
+                            mig: mig-demo-group
+                          trafficConfig:
+                            type: CSM
+                            spec:
+                              type: HTTPRoute
+                              route: projects/sales-209522/locations/global/httpRoutes/mig-demo-http-route
+                          connectorRef: Docker_Harness
+                          image: harness/google-mig-bluegreen-deploy:0.1.0-linux-amd64
+                          imagePullPolicy: Always
+                          resources:
+                            limits:
+                              memory: 512Mi
+                              cpu: "0.5"
+                          outputVariables: []
+                        timeout: 10m
+                    - step:
+                        type: GoogleMigSteadyState
+                        name: Steady State Check
+                        identifier: Steady_State_Check
+                        spec:
+                          mig: <+pipeline.stages.Deploy_MIG_BlueGreen.spec.execution.steps.Google_MIG_BlueGreen.steps.BlueGreen_Deploy.GoogleMigBlueGreenDeployOutcome.stageMig>
+                          instanceTemplate: <+pipeline.stages.Deploy_MIG_BlueGreen.spec.execution.steps.Google_MIG_BlueGreen.steps.BlueGreen_Deploy.GoogleMigBlueGreenDeployOutcome.rollbackData.deploymentMetadata.stage.instanceTemplate>
+                          connectorRef: Docker_Harness
+                          image: harness/google-mig-steady-state:0.1.0-linux-amd64
+                          imagePullPolicy: Always
+                          resources:
+                            limits:
+                              memory: 512Mi
+                              cpu: "0.5"
+                          outputVariables: []
+                        timeout: 10m
+                    - step:
+                        type: GoogleMigTrafficShift
+                        name: Traffic Shift 100
+                        identifier: Traffic_Shift_100
+                        spec:
+                          trafficConfig:
+                            type: CSM
+                            spec:
+                              type: HTTPRoute
+                              route: projects/sales-209522/locations/global/httpRoutes/mig-demo-http-route
+                              destinations:
+                                - destination: stable
+                                  weight: 0
+                                - destination: stage
+                                  weight: 100
+                          downsizeOldMig: true
+                          connectorRef: Docker_Harness
+                          image: harness/google-mig-traffic-shift:0.1.0-linux-amd64
+                          imagePullPolicy: Always
+                          resources:
+                            limits:
+                              memory: 512Mi
+                              cpu: "0.5"
+                          outputVariables: []
+                        timeout: 10m
+                  stepGroupInfra:
+                    type: KubernetesDirect
+                    spec:
+                      connectorRef: Harness_GKE
+                      namespace: default
+            rollbackSteps:
+              - stepGroup:
+                  name: Google MIG Rollback
+                  identifier: Google_MIG_Rollback
+                  steps:
+                    - step:
+                        type: GoogleMigBlueGreenRollback
+                        name: BlueGreen Rollback
+                        identifier: BlueGreen_Rollback
+                        spec:
+                          connectorRef: Docker_Harness
+                          image: harness/google-mig-bluegreen-rollback:0.1.0-linux-amd64
+                          imagePullPolicy: Always
+                          resources:
+                            limits:
+                              memory: 512Mi
+                              cpu: "0.5"
+                        timeout: 10m
+                  stepGroupInfra:
+                    type: KubernetesDirect
+                    spec:
+                      connectorRef: Harness_GKE
+                      namespace: default
