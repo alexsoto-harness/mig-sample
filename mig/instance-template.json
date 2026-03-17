@@ -1,0 +1,44 @@
+{
+  "name": "mig-demo-template",
+  "description": "Simple MIG demo instance template",
+  "properties": {
+    "machineType": "e2-micro",
+    "disks": [
+      {
+        "boot": true,
+        "autoDelete": true,
+        "initializeParams": {
+          "sourceImage": "projects/debian-cloud/global/images/family/debian-12",
+          "diskSizeGb": "10",
+          "diskType": "pd-standard"
+        }
+      }
+    ],
+    "networkInterfaces": [
+      {
+        "network": "global/networks/default",
+        "accessConfigs": [
+          {
+            "name": "External NAT",
+            "type": "ONE_TO_ONE_NAT"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "items": [
+        {
+          "key": "startup-script",
+          "value": "#!/bin/bash\necho 'MIG Demo instance started'"
+        }
+      ]
+    },
+    "tags": {
+      "items": ["http-server"]
+    },
+    "labels": {
+      "environment": "demo",
+      "managed-by": "harness"
+    }
+  }
+}

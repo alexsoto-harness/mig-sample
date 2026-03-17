@@ -1,0 +1,58 @@
+pipeline:
+  name: MIG Demo Deploy
+  identifier: MIG_Demo_Deploy
+  orgIdentifier: default
+  projectIdentifier: Reference_Architecture
+  tags:
+    deployment-type: mig
+  stages:
+    - stage:
+        name: Deploy MIG
+        identifier: Deploy_MIG
+        description: Standard MIG deployment
+        type: Deployment
+        spec:
+          deploymentType: GoogleManagedInstanceGroup
+          service:
+            serviceRef: MIG_Demo_Service
+            serviceInputs:
+              serviceDefinition:
+                type: GoogleManagedInstanceGroup
+                spec:
+                  artifacts:
+                    primary:
+                      primaryArtifactRef: <+input>
+                      sources: <+input>
+          environment:
+            environmentRef: MIG_Demo_Env
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: MIG_Demo_Infra
+          execution:
+            steps:
+              - stepGroup:
+                  name: MIG Deployment
+                  identifier: MIG_Deployment
+                  steps:
+                    - step:
+                        type: DownloadManifests
+                        name: Download Manifests
+                        identifier: DownloadManifests
+                        spec: {}
+                        failureStrategies: []
+                    - step:
+                        type: GoogleMigDeploy
+                        name: Google MIG Deploy
+                        identifier: GoogleMigDeploy
+                        spec:
+                          connectorRef: Docker_Harness
+                          mig: mig-demo-group
+                          image: harness/google-mig-deploy:0.0.1-linux-amd64
+                          targetSize: 1
+                        timeout: 10m
+                  stepGroupInfra:
+                    type: KubernetesDirect
+                    spec:
+                      connectorRef: Harness_GKE
+                      namespace: default
+            rollbackSteps: []

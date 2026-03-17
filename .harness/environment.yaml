@@ -1,0 +1,9 @@
+environment:
+  name: MIG Demo Env
+  identifier: MIG_Demo_Env
+  orgIdentifier: default
+  projectIdentifier: Reference_Architecture
+  description: Pre-production environment for MIG demo deployments
+  tags:
+    deployment-type: mig
+  type: PreProduction

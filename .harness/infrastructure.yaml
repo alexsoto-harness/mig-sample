@@ -1,0 +1,14 @@
+infrastructureDefinition:
+  name: MIG Demo Infra
+  identifier: MIG_Demo_Infra
+  orgIdentifier: default
+  projectIdentifier: Reference_Architecture
+  environmentRef: MIG_Demo_Env
+  deploymentType: GoogleManagedInstanceGroup
+  type: GoogleManagedInstanceGroup
+  spec:
+    connectorRef: account.Harness_GCP
+    project: sales-209522
+    region: us-central1
+    zone: us-central1-a
+  allowSimultaneousDeployments: false

@@ -1,0 +1,45 @@
+service:
+  name: MIG Demo Service
+  identifier: MIG_Demo_Service
+  orgIdentifier: default
+  projectIdentifier: Reference_Architecture
+  serviceDefinition:
+    type: GoogleManagedInstanceGroup
+    spec:
+      manifests:
+        - manifest:
+            identifier: instancetemplate
+            type: GoogleMigInstanceTemplate
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: Github_Harness
+                  gitFetchType: Branch
+                  paths:
+                    - mig/instance-template.json
+                  repoName: mig-sample
+                  branch: main
+        - manifest:
+            identifier: migconfig
+            type: GoogleMigConfiguration
+            spec:
+              store:
+                type: Github
+                spec:
+                  connectorRef: Github_Harness
+                  gitFetchType: Branch
+                  paths:
+                    - mig/mig-config.json
+                  repoName: mig-sample
+                  branch: main
+      artifacts:
+        primary:
+          primaryArtifactRef: <+input>
+          sources:
+            - identifier: debian_image
+              spec:
+                connectorRef: account.Harness_GCP
+                project: debian-cloud
+                versionRegex: debian-12-.*
+              type: GceImage

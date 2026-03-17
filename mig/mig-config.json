@@ -1,0 +1,17 @@
+{
+  "name": "mig-demo-group",
+  "description": "Simple MIG demo instance group",
+  "baseInstanceName": "mig-demo",
+  "targetSize": 1,
+  "updatePolicy": {
+    "type": "PROACTIVE",
+    "minimalAction": "REPLACE",
+    "maxSurge": {
+      "fixed": 1
+    },
+    "maxUnavailable": {
+      "fixed": 0
+    },
+    "replacementMethod": "SUBSTITUTE"
+  }
+}
