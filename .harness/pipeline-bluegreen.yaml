@@ -74,8 +74,8 @@ pipeline:
                         name: Steady State Check
                         identifier: Steady_State_Check
                         spec:
-                          mig: <+pipeline.stages.Deploy_MIG_BlueGreen.spec.execution.steps.Google_MIG_BlueGreen.steps.BlueGreen_Deploy.GoogleMigBlueGreenDeployOutcome.stageMig>
-                          instanceTemplate: <+pipeline.stages.Deploy_MIG_BlueGreen.spec.execution.steps.Google_MIG_BlueGreen.steps.BlueGreen_Deploy.GoogleMigBlueGreenDeployOutcome.rollbackData.deploymentMetadata.stage.instanceTemplate>
+                          mig: <+execution.steps.Google_MIG_BlueGreen.steps.BlueGreen_Deploy.GoogleMigBlueGreenDeployOutcome.stageMig>
+                          instanceTemplate: <+execution.steps.Google_MIG_BlueGreen.steps.BlueGreen_Deploy.GoogleMigBlueGreenDeployOutcome.stageTemplate>
                           connectorRef: Docker_Harness
                           image: harness/google-mig-steady-state:0.1.0-linux-amd64
                           imagePullPolicy: Always
