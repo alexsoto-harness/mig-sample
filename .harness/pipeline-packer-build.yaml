@@ -1,0 +1,96 @@
+pipeline:
+  name: MIG Packer Image Build
+  identifier: MIG_Packer_Image_Build
+  orgIdentifier: default
+  projectIdentifier: Reference_Architecture
+  tags:
+    purpose: image-build
+    tool: packer
+  variables:
+    - name: image_name
+      type: String
+      description: "Name for the output GCE image (e.g. mig-app-v0-0-1)"
+      required: true
+      value: <+input>
+    - name: source_image_family
+      type: String
+      description: "Source image family to build from"
+      default: "debian-12"
+      value: debian-12
+    - name: disk_size
+      type: String
+      description: "Disk size in GB for the image"
+      default: "20"
+      value: "20"
+  stages:
+    - stage:
+        name: Build GCE Image
+        identifier: Build_GCE_Image
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - stepGroup:
+                  name: Packer Build
+                  identifier: Packer_Build
+                  steps:
+                    - step:
+                        type: Run
+                        name: Clone Repository
+                        identifier: Clone_Repository
+                        spec:
+                          shell: Sh
+                          command: |
+                            git clone https://github.com/alexsoto-harness/mig-sample.git /workspace/repo
+                          connectorRef: Docker_Harness
+                          image: alpine/git:latest
+                    - step:
+                        type: Run
+                        name: Build Image with Packer
+                        identifier: Build_Image
+                        spec:
+                          shell: Sh
+                          command: |
+                            cd /workspace/repo
+
+                            # Write GCP credentials to file
+                            echo "$GCP_KEY" > /tmp/gcp-key.json
+                            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json
+
+                            # Initialize Packer plugins
+                            packer init packer/mig-image.pkr.hcl
+
+                            # Validate the template
+                            packer validate \
+                              -var "image_name=<+pipeline.variables.image_name>" \
+                              -var "source_image_family=<+pipeline.variables.source_image_family>" \
+                              -var "disk_size=<+pipeline.variables.disk_size>" \
+                              packer/mig-image.pkr.hcl
+
+                            # Build the image
+                            packer build \
+                              -var "image_name=<+pipeline.variables.image_name>" \
+                              -var "source_image_family=<+pipeline.variables.source_image_family>" \
+                              -var "disk_size=<+pipeline.variables.disk_size>" \
+                              -color=false \
+                              packer/mig-image.pkr.hcl
+
+                            # Clean up credentials
+                            rm -f /tmp/gcp-key.json
+
+                            echo "Image built successfully: <+pipeline.variables.image_name>"
+                          connectorRef: Docker_Harness
+                          image: hashicorp/packer:latest
+                          envVariables:
+                            GCP_KEY: <+secrets.getValue("account.GCP_Sales_Admin_key")>
+                          resources:
+                            limits:
+                              memory: 1Gi
+                              cpu: "1"
+                        timeout: 30m
+                  stepGroupInfra:
+                    type: KubernetesDirect
+                    spec:
+                      connectorRef: Harness_GKE
+                      namespace: default
+        tags: {}
